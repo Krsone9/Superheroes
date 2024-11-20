@@ -5,13 +5,14 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.isVisible
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.krsone9.superheroes.adapter.SuperheroesAdapter
 import com.krsone9.superheroes.data.SuperheroesResponse
 import com.krsone9.superheroes.databinding.ActivityMainBinding
 import com.krsone9.superheroes.service.SuperheroesService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runInterruptible
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -22,6 +23,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var retrofit: Retrofit
 
+    private lateinit var adapter: SuperheroesAdapter
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -43,6 +45,13 @@ class MainActivity : AppCompatActivity() {
                 return false
             }
         })
+
+        adapter = SuperheroesAdapter()
+        binding.rvView.setHasFixedSize(true)
+        binding.rvView.layoutManager = LinearLayoutManager(this)
+        binding.rvView.adapter = adapter
+
+
     }
 
     private fun searchByNaMe(query: String) {
@@ -51,10 +60,11 @@ class MainActivity : AppCompatActivity() {
             val myResponse = retrofit.create(SuperheroesService::class.java).getSuperheroes(query)
             if (myResponse.isSuccessful) {
                 val response: SuperheroesResponse? = myResponse.body()
-                if (response != null){
+                if (response != null) {
                     Log.i("krsone9", response.toString())
                     runOnUiThread {
-                    binding.progressBar.isVisible = false
+                        adapter.updateList(response.results)
+                        binding.progressBar.isVisible = false
                     }
 
                 }
